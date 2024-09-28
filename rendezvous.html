@@ -66,7 +66,7 @@
       .info-box.expanded::after {
        
         border-radius: 10px; /* Bord arrondi pour la bande de couleur */
-        background-color: var(--highlight-color);
+        
       }
 
       .info-box h4 {
@@ -185,6 +185,8 @@
         border-color: #ccc;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
       }
+
+
 
 
       .info-box.expanded {
@@ -320,6 +322,12 @@
         }
 
         @media (min-width: 1024px) {
+          .info-box.hovered::after,
+      .info-box.expanded::after {
+       
+        border-radius: 10px; /* Bord arrondi pour la bande de couleur */
+        background-color: var(--highlight-color);
+      }
           #map
           {
             display: flex;
@@ -333,7 +341,10 @@
       .container{
         max-width: none;
       }
-        
+
+     
+
+
     </style> 
     <link rel="icon" href="./image/favicon.ico" type="image/x-icon">
   </head>
@@ -658,232 +669,238 @@
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGXge67J5WsaxV4fMakPT4C-yGI8lty5k"></script>
     <script>
-      const icons = [
-        "./image/marqueurviolet.png",
-        "./image/marqueurrouge.png",
-        "./image/marqueurorange.png",
-      ];
-
-      const markers = [];
-      let selectedMarkerIndex = null;
-
-      const hoursData = [
-        {
-          // MOZART
-          week: { open: "07:30", close: "18:00" },
-          saturday: { open: "07:30", close: "16:00" },
-          sunday: { open: null, close: null }, // Fermé le dimanche
-        },
-        {
-          // LABO XV
-          week: { open: "07:30", close: "20:00" },
-          saturday: { open: "07:30", close: "16:00" },
-          sunday: { open: "09:00", close: "14:00" },
-        },
-        {
-          // THIAIS
-          week: { open: "07:30", close: "15:00" },
-          saturday: { open: "07:30", close: "15:00" },
-          sunday: { open: "09:00", close: "13:00" },
-        },
-      ];
-
-      function timeStringToMinutes(timeString) {
-  if (!timeString) return null;
-  const [hours, minutes] = timeString.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function updateStatus() {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Dimanche, 1 = Lundi, ..., 6 = Samedi
-  const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
-
-  document.querySelectorAll(".info-box").forEach((infoBox, index) => {
-    let hours;
-    if (dayOfWeek === 6) {
-      // Samedi
-      hours = hoursData[index].saturday;
-    } else if (dayOfWeek === 0) {
-      // Dimanche
-      hours = hoursData[index].sunday;
-    } else {
-      // Semaine (Lundi à Vendredi)
-      hours = hoursData[index].week;
-    }
-
-    const openTimeMinutes = timeStringToMinutes(hours.open);
-    const closeTimeMinutes = timeStringToMinutes(hours.close);
-
-    const isOpen =
-      openTimeMinutes !== null &&
-      currentTimeMinutes >= openTimeMinutes &&
-      currentTimeMinutes <= closeTimeMinutes;
-
-    const statusText = infoBox.querySelector(".status-text");
-    const arrowIcon = infoBox.querySelector(".arrow");
-    const clockIcon = infoBox.querySelector(".clock-icon");
-
-    statusText.textContent = isOpen ? "Ouvert" : "Fermé";
-    statusText.classList.toggle("closed", !isOpen);
-
-    // Mettre à jour l'image de la flèche et de l'horloge selon le statut
-    arrowIcon.src = isOpen ? "./image/flecheverte.png" : "./image/flecherouge.png";
-    clockIcon.src = isOpen ? "./image/horlogeverte.png" : "./image/horlogerouge.png";
-  });
-}
-
-
-      function handleBoxClick(index) {
-        const infoBoxes = document.querySelectorAll(".info-box");
-
-        // Si une autre box est déjà sélectionnée, on la réinitialise
-        if (selectedMarkerIndex !== null && selectedMarkerIndex !== index) {
-          markers[selectedMarkerIndex].setIcon({
-            url: icons[selectedMarkerIndex],
-            scaledSize: new google.maps.Size(45, 45),
-          });
-          infoBoxes[selectedMarkerIndex].classList.remove("expanded");
-          infoBoxes[selectedMarkerIndex].classList.remove("hovered"); // Retire aussi l'état "hover"
-        }
-
-        // Si la même box est cliquée à nouveau, on la réduit
-        if (selectedMarkerIndex === index) {
-          selectedMarkerIndex = null;
-          infoBoxes[index].classList.remove("expanded");
-        } else {
-          // Si une nouvelle box est sélectionnée, on l'agrandit
-          selectedMarkerIndex = index;
-          markers[index].setIcon({
-            url: icons[index],
-            scaledSize: new google.maps.Size(50, 50),
-          });
-          infoBoxes[index].classList.add("expanded");
-
-          // Assure-toi que la boîte est entièrement visible
-          setTimeout(() => {
-            infoBoxes[index].scrollTop = infoBoxes[index].scrollHeight;
-          }, 300); // La durée doit correspondre à la durée de la transition CSS
-        }
-      }
-
-      function initMap() {
-        const locations = [
-          { lat: 48.8571864, lng: 2.2726514 }, // MOZART
-          { lat: 48.836884, lng: 2.2960659 }, // LABO XV
-          { lat: 48.7562864, lng: 2.3994395 }, // THIAIS
+        const icons = [
+          "./image/marqueurviolet.png",
+          "./image/marqueurrouge.png",
+          "./image/marqueurorange.png",
         ];
 
-        const map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 11.5,
-          center: { lat: 48.859979, lng: 2.221961 },
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-          zoomControl: true,
-          styles: [
-            /* styles ici */
-          ],
-        });
+        const markers = [];
+        let selectedMarkerIndex = null;
 
-        locations.forEach((location, index) => {
-          const marker = new google.maps.Marker({
-            position: location,
-            map: map,
-            icon: {
-              url: icons[index],
-              scaledSize: new google.maps.Size(45, 45),
-            },
-          });
+        const hoursData = [
+          {
+            // MOZART
+            week: { open: "07:30", close: "18:00" },
+            saturday: { open: "07:30", close: "16:00" },
+            sunday: { open: null, close: null }, // Fermé le dimanche
+          },
+          {
+            // LABO XV
+            week: { open: "07:30", close: "20:00" },
+            saturday: { open: "07:30", close: "16:00" },
+            sunday: { open: "09:00", close: "14:00" },
+          },
+          {
+            // THIAIS
+            week: { open: "07:30", close: "15:00" },
+            saturday: { open: "07:30", close: "15:00" },
+            sunday: { open: "09:00", close: "13:00" },
+          },
+        ];
 
-          markers[index] = marker;
+        function timeStringToMinutes(timeString) {
+    if (!timeString) return null;
+    const [hours, minutes] = timeString.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
 
-          google.maps.event.addListener(marker, "click", () => {
-            handleBoxClick(index);
-          });
+  function updateStatus() {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Dimanche, 1 = Lundi, ..., 6 = Samedi
+    const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
 
-          google.maps.event.addListener(marker, "mouseover", () => {
-            if (index !== selectedMarkerIndex) {
-              marker.setIcon({
-                url: icons[index],
-                scaledSize: new google.maps.Size(50, 50),
-              });
-              document
-                .querySelectorAll(".info-box")
-                [index].classList.add("hovered");
-            }
-          });
-
-          google.maps.event.addListener(marker, "mouseout", () => {
-            if (index !== selectedMarkerIndex) {
-              marker.setIcon({
-                url: icons[index],
-                scaledSize: new google.maps.Size(45, 45),
-              });
-              document
-                .querySelectorAll(".info-box")
-                [index].classList.remove("hovered");
-            }
-          });
-        });
-
-        document.querySelectorAll(".info-box").forEach((infoBox, index) => {
-          infoBox.style.setProperty(
-            "--highlight-color",
-            icons[index].includes("violet")
-              ? "#8e44ad"
-              : icons[index].includes("rouge")
-              ? "#e74c3c"
-              : "#f39c12"
-          ); // Couleur basée sur l'icône du marqueur
-
-          infoBox.addEventListener("click", () => {
-            handleBoxClick(index);
-          });
-
-          infoBox.addEventListener("mouseover", () => {
-            if (index !== selectedMarkerIndex) {
-              markers[index].setIcon({
-                url: icons[index],
-                scaledSize: new google.maps.Size(50, 50),
-              });
-              infoBox.classList.add("hovered");
-            }
-          });
-
-          infoBox.addEventListener("mouseout", () => {
-            if (index !== selectedMarkerIndex) {
-              markers[index].setIcon({
-                url: icons[index],
-                scaledSize: new google.maps.Size(45, 45),
-              });
-              infoBox.classList.remove("hovered");
-            }
-          });
-        });
-
-        updateStatus(); // Appel initial pour mettre à jour le statut
+    document.querySelectorAll(".info-box").forEach((infoBox, index) => {
+      let hours;
+      if (dayOfWeek === 6) {
+        // Samedi
+        hours = hoursData[index].saturday;
+      } else if (dayOfWeek === 0) {
+        // Dimanche
+        hours = hoursData[index].sunday;
+      } else {
+        // Semaine (Lundi à Vendredi)
+        hours = hoursData[index].week;
       }
 
-      window.addEventListener("error", function (event) {
-        if (event.message.includes("Google Maps JavaScript API")) {
-          console.error("Erreur de chargement de Google Maps :", event.message);
+      const openTimeMinutes = timeStringToMinutes(hours.open);
+      const closeTimeMinutes = timeStringToMinutes(hours.close);
+
+      const isOpen =
+        openTimeMinutes !== null &&
+        currentTimeMinutes >= openTimeMinutes &&
+        currentTimeMinutes <= closeTimeMinutes;
+
+      const statusText = infoBox.querySelector(".status-text");
+      const arrowIcon = infoBox.querySelector(".arrow");
+      const clockIcon = infoBox.querySelector(".clock-icon");
+
+      statusText.textContent = isOpen ? "Ouvert" : "Fermé";
+      statusText.classList.toggle("closed", !isOpen);
+
+      // Mettre à jour l'image de la flèche et de l'horloge selon le statut
+      arrowIcon.src = isOpen ? "./image/flecheverte.png" : "./image/flecherouge.png";
+      clockIcon.src = isOpen ? "./image/horlogeverte.png" : "./image/horlogerouge.png";
+    });
+  }
+
+
+        function handleBoxClick(index) {
+          const infoBoxes = document.querySelectorAll(".info-box");
+
+          // Si une autre box est déjà sélectionnée, on la réinitialise
+          if (selectedMarkerIndex !== null && selectedMarkerIndex !== index) {
+            markers[selectedMarkerIndex].setIcon({
+              url: icons[selectedMarkerIndex],
+              scaledSize: new google.maps.Size(45, 45),
+            });
+            infoBoxes[selectedMarkerIndex].classList.remove("expanded");
+            infoBoxes[selectedMarkerIndex].classList.remove("hovered"); // Retire aussi l'état "hover"
+          }
+
+          // Si la même box est cliquée à nouveau, on la réduit
+          if (selectedMarkerIndex === index) {
+            selectedMarkerIndex = null;
+            infoBoxes[index].classList.remove("expanded");
+          } else {
+            // Si une nouvelle box est sélectionnée, on l'agrandit
+            selectedMarkerIndex = index;
+            markers[index].setIcon({
+              url: icons[index],
+              scaledSize: new google.maps.Size(50, 50),
+            });
+            infoBoxes[index].classList.add("expanded");
+
+            // Assure-toi que la boîte est entièrement visible
+            setTimeout(() => {
+              infoBoxes[index].scrollTop = infoBoxes[index].scrollHeight;
+            }, 300); // La durée doit correspondre à la durée de la transition CSS
+          }
         }
-      });
 
-      document.addEventListener("DOMContentLoaded", function () {
-        updateStatus(); // Met à jour le statut des boîtes d'information au chargement de la page
-        initMap(); // Initialise la carte Google Maps
-      });
+        function initMap() {
+          const locations = [
+            { lat: 48.8571864, lng: 2.2726514 }, // MOZART
+            { lat: 48.836884, lng: 2.2960659 }, // LABO XV
+            { lat: 48.7562864, lng: 2.3994395 }, // THIAIS
+          ];
 
-      document.querySelectorAll(".rdv-button").forEach(button => {
-      button.addEventListener("click", function(event) {
-    event.stopPropagation(); // Empêche l'ouverture de la box
-    // Redirection vers la page de rendez-vous
+          const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 11.5,
+            center: { lat: 48.859979, lng: 2.221961 },
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true,
+            styles: [
+              /* styles ici */
+            ],
+          });
+
+          locations.forEach((location, index) => {
+            const marker = new google.maps.Marker({
+              position: location,
+              map: map,
+              icon: {
+                url: icons[index],
+                scaledSize: new google.maps.Size(45, 45),
+              },
+            });
+
+            markers[index] = marker;
+
+            google.maps.event.addListener(marker, "click", () => {
+              handleBoxClick(index);
+            });
+
+            google.maps.event.addListener(marker, "mouseover", () => {
+              if (index !== selectedMarkerIndex) {
+                marker.setIcon({
+                  url: icons[index],
+                  scaledSize: new google.maps.Size(50, 50),
+                });
+                document
+                  .querySelectorAll(".info-box")
+                  [index].classList.add("hovered");
+              }
+            });
+
+            google.maps.event.addListener(marker, "mouseout", () => {
+              if (index !== selectedMarkerIndex) {
+                marker.setIcon({
+                  url: icons[index],
+                  scaledSize: new google.maps.Size(45, 45),
+                });
+                document
+                  .querySelectorAll(".info-box")
+                  [index].classList.remove("hovered");
+              }
+            });
+          });
+
+          document.querySelectorAll(".info-box").forEach((infoBox, index) => {
+            
+            infoBox.style.setProperty(
+              "--highlight-color",
+              icons[index].includes("violet")
+                ? "#8e44ad"
+                : icons[index].includes("rouge")
+                ? "#e74c3c"
+                : "#f39c12"
+            ); // Couleur basée sur l'icône du marqueur
+
+            infoBox.addEventListener("click", () => {
+              handleBoxClick(index);
+            });
+
+            infoBox.addEventListener("mouseover", () => {
+              if (window.innerWidth >= 1024) {
+
+              if (index !== selectedMarkerIndex) {
+                markers[index].setIcon({
+                  url: icons[index],
+                  scaledSize: new google.maps.Size(50, 50),
+                });
+                infoBox.classList.add("hovered");
+              }
+            }
+            });
+
+            infoBox.addEventListener("mouseout", () => {
+              if (window.innerWidth >= 1024) {
+
+              if (index !== selectedMarkerIndex) {
+                markers[index].setIcon({
+                  url: icons[index],
+                  scaledSize: new google.maps.Size(45, 45),
+                });
+                infoBox.classList.remove("hovered");
+              }}
+            });
+          });
+
+          updateStatus(); // Appel initial pour mettre à jour le statut
+        }
+
+        window.addEventListener("error", function (event) {
+          if (event.message.includes("Google Maps JavaScript API")) {
+            console.error("Erreur de chargement de Google Maps :", event.message);
+          }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+          updateStatus(); // Met à jour le statut des boîtes d'information au chargement de la page
+          initMap(); // Initialise la carte Google Maps
+        });
+
+        document.querySelectorAll(".rdv-button").forEach(button => {
+        button.addEventListener("click", function(event) {
+      event.stopPropagation(); // Empêche l'ouverture de la box
+      // Redirection vers la page de rendez-vous
+    });
   });
-});
 
-    </script>
+      </script>
 
 <script src="headerFooter_script.js"></script>
 
